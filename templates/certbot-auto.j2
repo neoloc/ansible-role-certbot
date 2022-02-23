@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# Do not change file directly, changes will be overwritten.
+#
+# this script is to maintain initialised sites
+#
+# Renew the certificate
+#certbot renew --force-renewal --preferred-challenges http
+certbot renew --preferred-challenges http
+
+# cleanup haproxy certificate list temp file
+if test -f /tmp/certificate.list; then rm /tmp/certificate.list; fi
+
+# create new haproxy certificate list temp file
+touch /tmp/certificate.list
+
+for site in $(grep -vE '(^#|^$)' /etc/certbot-auto/sites.list); do
+	# create directories required
+	mkdir -p /etc/ssl/${site}/
+
+	# Concatenate new cert files
+	bash -c "cat /etc/letsencrypt/live/${site}/fullchain.pem /etc/letsencrypt/live/${site}/privkey.pem > /etc/ssl/${site}/${site}.pem"
+
+	# update the haproxy certificate.list file
+	echo "/etc/haproxy/tls/${site}/${site}.pem" >> /tmp/certificate.list
+done
+
+{% for item in certbot_ssl_destinations %}
+# send files to: {{ item.comment }}
+{% for site in item.sites %}
+# --> {{ site }}
+ssh {{ item.user }}@{{ item.host }} mkdir -p {{ item.directory }}/{{ site }}
+scp /etc/ssl/{{ site }}/{{ site }}.pem {{ item.user }}@{{ item.host }}:{{ item.directory }}/{{ site }}/
+{% endfor %}
+
+{% endfor %}
+# sync certificte list
+{% for item in certbot_ssl_destinations %}
+{% if item.certlist is defined and item.certlist == True %}
+scp /tmp/certificate.list {{ item.user }}@{{ item.host }}:/etc/haproxy/tls/certificate.list
+{% endif %}
+{% endfor %}
+
+# run post-processing commands
+{% for item in certbot_ssl_destinations %}
+ssh {{ item.user }}@{{ item.host }} {{ item.postcmd }}
+{% endfor %}
+
+# cluster sync
+{% if certbot_cluster is defined and certbot_cluster == True %}
+	rsync -avc --delete /etc/letsencrypt/live root@{{ certbot_cluster_peer }}:/etc/letsencrypt
+{% endif %}

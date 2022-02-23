@@ -1,0 +1,8 @@
+[Unit]
+Description=LetsEncrypt Certbot Renewal Process
+
+[Service]
+Type=oneshot
+Nice=19
+IOSchedulingClass=3
+ExecStart=/usr/local/bin/certbot-auto

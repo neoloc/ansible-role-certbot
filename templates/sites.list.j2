@@ -1,0 +1,10 @@
+# {{ ansible_managed }}
+# Do not change file directly, changes will be overwritten.
+#
+
+# one certificate per-line
+{% if certbot_sites is defined %}
+{% for item in certbot_sites %}
+{{ item }}
+{% endfor %}
+{% endif %}

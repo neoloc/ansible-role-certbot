@@ -1,0 +1,131 @@
+# letsencrypt: certbot-auto script
+#
+#
+---
+
+- name: install certbot package
+  package:
+    name: certbot
+    state: present
+  tags: [ certbot ]
+  when: certbot_configure == True
+
+- name: install rsync package for clusters
+  package:
+    name: rsync
+    state: present
+  tags: [ certbot ]
+  when: certbot_configure == True and certbot_cluster == True
+
+- name: create /etc/certbot-auto
+  file:
+    path: /etc/certbot-auto
+    state: directory
+  tags: [ certbot ]
+  when: certbot_configure == True
+
+- name: install certbot-auto scripts
+  template:
+    src: "{{ item }}.j2"
+    dest: "/usr/local/bin/{{ item }}"
+    owner: root
+    group: root
+    mode: '775'
+  tags: [ certbot ]
+  with_items:
+    - certbot-auto
+    - certbot-initialise
+    - certbot-notify
+  when: certbot_configure == True
+
+- name: check if certbot-auto service exists
+  stat: path=/etc/systemd/system/certbot-auto.service
+  register: certbot-auto-service-state
+
+- name: check if certbot-auto timer exists
+  stat: path=/etc/systemd/system/certbot-auto.timer
+  register: certbot-auto-timer-state
+
+- name: install certbot-auto service
+  template:
+    src: certbot-auto.service
+    dest: /etc/systemd/system/
+    owner: root
+    group: root
+    mode: '664'
+  tags: [ certbot ]
+  when: certbot_configure == True
+  register: certbot-auto-service-install
+
+- name: install certbot-auto timer
+  template:
+    src: certbot-auto.timer
+    dest: /etc/systemd/system/
+    owner: root
+    group: root
+    mode: '664'
+  tags: [ certbot ]
+  when: certbot_configure == True
+  register: certbot-auto-timer-install
+
+- name: install certbot sites.list
+  template:
+    src: sites.list.j2
+    dest: /etc/certbot-auto/sites.list
+    owner: root
+    group: root
+    mode: '664'
+  tags: [ certbot ]
+  when: certbot_configure == True
+
+- name: check for new sites to be initialised
+  stat:
+    path: "/etc/letsencrypt/live/{{ item }}/fullchain.pem"
+  with_items: "{{ certbot_sites }}"
+  register: check_site_initialised
+  tags: [ certbot ]
+  when: certbot_configure == True
+
+- name: initialise all new sites
+  ansible.builtin.command: "/usr/local/bin/certbot-initialise {{ item.item }}"
+  with_items: "{{ check_site_initialised.results }}"
+  tags: [ certbot ]
+  when:
+    - certbot_configure == True
+    - certbot_cluster == False
+    - item.stat.exists
+
+- name: initialise all new sites on primary cluster member
+  ansible.builtin.command: "/usr/local/bin/certbot-initialise {{ item.item }}"
+  with_items: "{{ check_site_initialised.results }}"
+  tags: [ certbot ]
+  when:
+    - item.stat.exists
+    - certbot_cluster == True
+    - ansible_hostname == certbot_cluster_primary
+
+- name: reload systemd-daemon to enable new timer/service
+  ansible.builtin.systemd:
+    daemon_reload: yes
+  tags: [ certbot ]
+  when: certbot_configure == True
+
+- name: enable the certbot-auto timer
+  ansible.builtin.systemd:
+    name: certbot-auto.timer
+    state: started
+    enabled: yes
+  tags: [ certbot ]
+  when: certbot_configure == True and certbot_cluster == False
+
+- name: disable the certbot-auto timer if in a cluster
+  ansible.builtin.systemd:
+    name: certbot-auto.timer
+    enabled: no
+  tags: [ certbot ]
+  when:
+    - certbot_configure == True
+    - certbot_cluster == True
+    - certbot-auto-timer-state.stat.exists == false
+
+...

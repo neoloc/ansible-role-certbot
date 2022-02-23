@@ -1,0 +1,60 @@
+---
+# defaults file for role
+
+# change to true to configure certbot
+certbot_configure: False
+
+# set to true if this certbot instance is has a failover pair
+# when true: this will
+#     - not enable/start the timer service
+#     - run initialise on only one host
+certbot_cluster: False
+
+# other cluster member (set in hosts_vars)
+# certbot_cluster_peer: somehost.domain.tld
+
+# primary/master cluster member (set in group_vars)
+# certbot_cluster_primary: masterhost.domain.tld
+
+# email address to register certificates with at letsencrypt
+certbot_email: certbot@domain.tld
+
+# list of sites to request certificates for
+certbot_sites: []
+# certbot_sites:
+#   - site1.domain.tld
+#   - site2.domain.tld
+#   - wiki.domain.tld
+#   - mta.domain.tld
+
+# where to send certificates after generation
+certbot_ssl_destinations: []
+# certbot_ssl_destinations:
+#   - host: halb1.domain.tld
+#     user: root
+#     directory: /etc/haproxy/tls
+#     postcmd: systemctl reload haproxy
+#     comment: haproxy node 1
+#     certlist: true
+#     sites:
+#       - site1.domain.tld
+#       - site2.domain.tld
+#       - www.domain.tld
+#   - host: halb2.domain.tld
+#     user: root
+#     directory: /etc/haproxy/tls
+#     postcmd: systemctl reload haproxy
+#     comment: haproxy node 2
+#     certlist: true
+#     sites:
+#       - site1.domain.tld
+#       - site2.domain.tld
+#       - www.domain.tld
+#   - host: mta1.domain.tld
+#     user: root
+#     directory: /etc/postfix/tls
+#     postcmd: systemctl reload postfix
+#     comment: mail gateway
+#     certlist: false
+#     sites:
+#       - mta.domain.tld

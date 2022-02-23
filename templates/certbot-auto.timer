@@ -1,0 +1,10 @@
+[Unit]
+Description=LetsEncrypt Certbot Renewal Timer
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+Unit=certbot-auto.service
+
+[Install]
+WantedBy=timers.target

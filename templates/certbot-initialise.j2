@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# Do not change file directly, changes will be overwritten.
+#
+# this script is for when creating a certificate for the first time
+#
+certbot certonly --standalone -d $1 --non-interactive --agree-tos --email {{ certbot_email }} --http-01-port=8888

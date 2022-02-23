@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# {{ ansible_managed }}
+# Do not change file directly, changes will be overwritten.
+#
+# this script is to perform notify functions on failover events
+#
+# Renew the certificate
+#!/bin/bash
+TYPE=$1
+NAME=$2
+STATE=$3
+case $STATE in
+	"MASTER")	/usr/bin/systemctl enable certbot-auto.timer
+				/usr/bin/systemctl start certbot-auto.timer
+				/usr/bin/logger "Certbot-Auto: MASTER STATE enabled"
+	          	;;
+	"BACKUP")	/usr/bin/systemctl stop certbot-auto.timer
+				/usr/bin/systemctl disable certbot-auto.timer
+				/usr/bin/logger "Certbot-Auto: BACKUP STATE enabled"
+	         	;;
+	"FAULT")	/usr/bin/systemctl stop certbot-auto.timer
+				/usr/bin/systemctl disable certbot-auto.timer
+				/usr/bin/logger "Certbot-Auto: FAULT STATE enabled"
+	         	exit 0
+	         	;;
+	*)       	/usr/bin/logger "Certbot-Auto status unknown"
+	         	exit 1
+	         	;;
+esac
