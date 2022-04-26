@@ -38,14 +38,6 @@
     - certbot-notify
   when: certbot_configure == True
 
-- name: check if certbot-auto service exists
-  stat: path=/etc/systemd/system/certbot-auto.service
-  register: certbot-auto-service-state
-
-- name: check if certbot-auto timer exists
-  stat: path=/etc/systemd/system/certbot-auto.timer
-  register: certbot-auto-timer-state
-
 - name: install certbot-auto service
   template:
     src: certbot-auto.service
@@ -55,7 +47,6 @@
     mode: '664'
   tags: [ certbot ]
   when: certbot_configure == True
-  register: certbot-auto-service-install
 
 - name: install certbot-auto timer
   template:
@@ -66,7 +57,6 @@
     mode: '664'
   tags: [ certbot ]
   when: certbot_configure == True
-  register: certbot-auto-timer-install
 
 - name: install certbot sites.list
   template:
@@ -126,6 +116,5 @@
   when:
     - certbot_configure == True
     - certbot_cluster == True
-    - certbot-auto-timer-state.stat.exists == false
 
 ...
