@@ -83,14 +83,14 @@
   when:
     - certbot_configure == True
     - certbot_cluster == False
-    - item.stat.exists
+    - item.stat.exists == False
 
 - name: initialise all new sites on primary cluster member
   ansible.builtin.command: "/usr/local/bin/certbot-initialise {{ item.item }}"
   with_items: "{{ check_site_initialised.results }}"
   tags: [ certbot ]
   when:
-    - item.stat.exists
+    - item.stat.exists == False
     - certbot_cluster == True
     - ansible_hostname == certbot_cluster_primary
 
