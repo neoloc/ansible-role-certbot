@@ -34,6 +34,8 @@ scp /etc/ssl/{{ site }}/{{ site }}.pem {{ item.user }}@{{ item.host }}:{{ item.d
 {% endfor %}
 
 # create certificate list
+rm -rf /tmp/certificate.list.combined
+rm -rf /tmp/certificate.list
 {% for item in certbot_ssl_destinations %}
 {% if item.certlist is defined and item.certlist == True %}
 {% for site in item.sites %}
