@@ -21,8 +21,6 @@ for site in $(grep -vE '(^#|^$)' /etc/certbot-auto/sites.list); do
 	# Concatenate new cert files
 	bash -c "cat /etc/letsencrypt/live/${site}/fullchain.pem /etc/letsencrypt/live/${site}/privkey.pem > /etc/ssl/${site}/${site}.pem"
 
-	# update the haproxy certificate.list file
-	echo "/etc/haproxy/tls/${site}/${site}.pem" >> /tmp/certificate.list
 done
 
 {% for item in certbot_ssl_destinations %}
@@ -34,6 +32,19 @@ scp /etc/ssl/{{ site }}/{{ site }}.pem {{ item.user }}@{{ item.host }}:{{ item.d
 {% endfor %}
 
 {% endfor %}
+
+# create certificate list
+{% for item in certbot_ssl_destinations %}
+{% if item.certlist is defined and item.certlist == True %}
+{% for site in item.sites %}
+echo "/etc/haproxy/tls/${site}/${site}.pem" >> /tmp/certificate.list.combined
+ {% endfor %}
+{% endif %}
+{% endfor %}
+
+# cleanup the certificate list
+awk '!seen[$0]++' /tmp/certificate.list.combined >> /tmp/certificate.list
+
 # sync certificte list
 {% for item in certbot_ssl_destinations %}
 {% if item.certlist is defined and item.certlist == True %}
