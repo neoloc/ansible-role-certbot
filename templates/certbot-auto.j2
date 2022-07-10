@@ -43,7 +43,7 @@ echo "/etc/haproxy/tls/${site}/${site}.pem" >> /tmp/certificate.list.combined
 {% endfor %}
 
 # cleanup the certificate list
-awk '!seen[$0]++' /tmp/certificate.list.combined >> /tmp/certificate.list
+awk '!seen[$0]++' /tmp/certificate.list.combined > /tmp/certificate.list
 
 # sync certificte list
 {% for item in certbot_ssl_destinations %}
