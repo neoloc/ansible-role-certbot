@@ -38,7 +38,7 @@ scp /etc/ssl/{{ site }}/{{ site }}.pem {{ item.user }}@{{ item.host }}:{{ item.d
 {% if item.certlist is defined and item.certlist == True %}
 {% for site in item.sites %}
 echo "/etc/haproxy/tls/${site}/${site}.pem" >> /tmp/certificate.list.combined
- {% endfor %}
+{% endfor %}
 {% endif %}
 {% endfor %}
 
