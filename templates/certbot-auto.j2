@@ -39,7 +39,7 @@ rm -rf /tmp/certificate.list
 {% for item in certbot_ssl_destinations %}
 {% if item.certlist is defined and item.certlist == True %}
 {% for site in item.sites %}
-echo "/etc/haproxy/tls/{{ site }}/{{ site }}.pem" >> /tmp/certificate.list.combined
+echo "/etc/ssl/{{ site }}/{{ site }}.pem" >> /tmp/certificate.list.combined
 {% endfor %}
 {% endif %}
 {% endfor %}
